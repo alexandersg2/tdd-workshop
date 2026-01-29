@@ -1,0 +1,2 @@
+class InvalidPostError(ValueError):
+    pass
