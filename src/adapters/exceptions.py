@@ -1,0 +1,2 @@
+class FailedToFetchPostsError(Exception):
+    pass
