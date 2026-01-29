@@ -30,3 +30,7 @@ class JsonPlaceholderAdapter:
             raise InvalidPostError() from e
 
         return posts
+
+    # TODO: Implement get_post(post_id: int) method
+
+    # TODO: Implement get_comments(post_id: int) method
