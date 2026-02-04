@@ -1,8 +1,8 @@
 import requests
 from pydantic import BaseModel, ValidationError
 
-from adapters.exceptions import FailedToFetchPostsError
-from domain.exceptions import InvalidPostError
+from adapters.exceptions import FailedToFetchPostsError, FailedToFetchPostError, FailedToFetchCommentsError
+from domain.exceptions import InvalidPostError, InvalidCommentError
 
 # * Faking an env variable - demo purposes only
 BASE_URL_ENV = "https://jsonplaceholder.typicode.com"
@@ -11,6 +11,11 @@ BASE_URL_ENV = "https://jsonplaceholder.typicode.com"
 class Post(BaseModel):
     id: int
     title: str
+
+class Comment(BaseModel):
+    id: int
+    postId: int
+    body: str
 
 
 class JsonPlaceholderAdapter:
@@ -31,6 +36,28 @@ class JsonPlaceholderAdapter:
 
         return posts
 
-    # TODO: Implement get_post(post_id: int) method
+    def get_post(self, post_id: int) -> Post:
+        try:
+            response = requests.get(f"{self.base_url}/posts/{post_id}")
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            raise FailedToFetchPostError(f"Failed to fetch post: {e}") from e
 
-    # TODO: Implement get_comments(post_id: int) method
+        try:
+            return Post(**response.json())
+        except ValidationError as e:
+            raise InvalidPostError() from e
+
+    def get_comments(self, post_id: int) -> list[Comment]:
+        try:
+            response = requests.get(f"{self.base_url}/posts/{post_id}/comments")
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            raise FailedToFetchCommentsError(f"Failed to fetch comments: {e}") from e
+
+        try:
+            return [Comment(**comment) for comment in response.json()]
+        except ValidationError as e:
+            raise InvalidCommentError() from e
+
+
